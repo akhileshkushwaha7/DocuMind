@@ -42,6 +42,13 @@ from app.routers import auth, documents, chat, admin
 
 app = FastAPI(title="DocuMind API")
 
+from app.core.database import Base, engine
+
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://docu-mind-nu-one.vercel.app", "http://localhost:3000"],
