@@ -39,7 +39,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, documents, chat, admin
-
+import os
 app = FastAPI(title="DocuMind API")
 
 from app.core.database import Base, engine
