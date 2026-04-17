@@ -110,8 +110,7 @@
 #     await db.commit()
 #     return {"detail": "Deleted"}
 
-```python
-import os, shutil, uuid
+import os, shutil, uuid, asyncio
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -121,6 +120,7 @@ from app.models.user import User
 from app.models.document import Document, DocumentStatus
 from app.schemas.document import DocumentResponse, DocumentListResponse
 from app.services.cache import get_cached, set_cached, invalidate
+from app.worker import embed_document  # ✅ import worker function
 
 UPLOAD_DIR = "uploads"
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -146,12 +146,15 @@ async def upload_document(
         user_id=user.id,
         filename=file.filename,
         file_path=file_path,
-        status=DocumentStatus.processing  # ✅ important for cron job
+        status=DocumentStatus.processing  # start as processing
     )
     db.add(doc)
     
     await db.commit()
     await db.refresh(doc)
+
+    # ✅ Run embedding in background (FREE solution)
+    asyncio.create_task(embed_document(None, str(doc.id)))
 
     return doc
 
@@ -228,4 +231,6 @@ async def delete_document(
     await db.commit()
 
     return {"detail": "Deleted"}
-```
+
+
+
