@@ -108,6 +108,31 @@ async def embed_document(ctx, document_id: str):
             log.error("embed_job_failed", document_id=document_id, error=str(e))
 
     await engine.dispose()
+async def run_pending_documents():
+    """
+    Cron job entrypoint — processes all pending documents
+    """
+    import asyncio
+    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+    from sqlalchemy import select
+    from app.models.document import Document, DocumentStatus
+    from app.core.config import settings
+
+    engine = create_async_engine(settings.DATABASE_URL)
+    Session = async_sessionmaker(engine, expire_on_commit=False)
+
+    async with Session() as db:
+        result = await db.execute(
+            select(Document).where(Document.status == DocumentStatus.processing)
+        )
+
+        docs = result.scalars().all()
+
+        for doc in docs:
+            print(f"[CRON] Processing document {doc.id}")
+            await embed_document(None, str(doc.id))
+
+    await engine.dispose()
 
 
 # ── Worker class config ────────────────────────────────────────
