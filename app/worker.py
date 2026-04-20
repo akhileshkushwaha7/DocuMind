@@ -208,12 +208,14 @@ async def embed_document(ctx, document_id: str):
                 chunks.append(enc.decode(chunk_tokens))
                 start += chunk_size - overlap
 
-            # 3. 🔥 EMBEDDING (OPTIMIZED)
-            vectors = model.encode(
-                chunks,
-                batch_size=4,
-                show_progress_bar=False
-            ).tolist()
+            # # 3. 🔥 EMBEDDING (OPTIMIZED)
+            # vectors = model.encode(
+            #     chunks,
+            #     batch_size=4,
+            #     show_progress_bar=False
+            # ).tolist()
+            # Add explicit timeout for embedding
+            vectors = asyncio.wait_for(asyncio.to_thread(lambda: model.encode(chunks, batch_size=4, show_progress_bar=False)),timeout=300).tolist()
 
             # 4. Qdrant setup
             collection = "documents"
