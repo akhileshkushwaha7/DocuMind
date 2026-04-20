@@ -16,11 +16,18 @@ log.info("worker_started", pid=os.getpid())
 
 # ── Redis config ──────────────────────────────────────────────
 
+# def get_redis_settings() -> RedisSettings:
+#     url = os.getenv("REDIS_URL", "redis://localhost:6379")
+#     host = url.split("//")[1].split(":")[0]
+#     port = int(url.split(":")[-1])
+#     return RedisSettings(host=host, port=port)
+
+from arq.connections import RedisSettings
+import os
+
 def get_redis_settings() -> RedisSettings:
-    url = os.getenv("REDIS_URL", "redis://localhost:6379")
-    host = url.split("//")[1].split(":")[0]
-    port = int(url.split(":")[-1])
-    return RedisSettings(host=host, port=port)
+    return RedisSettings.from_dsn(os.environ["REDIS_URL"])
+
 
 # ── 🔥 LOAD MODEL ONCE (CRITICAL FIX) ──────────────────────────
 from sentence_transformers import SentenceTransformer
