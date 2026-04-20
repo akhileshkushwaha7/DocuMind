@@ -142,6 +142,11 @@ import uuid
 import os
 
 log = structlog.get_logger()
+import sys
+
+# Add after imports, around line 144
+print(f"🚀 Worker starting with PID {os.getpid()}", file=sys.stderr, flush=True)
+log.info("worker_started", pid=os.getpid())
 
 # ── Redis config ──────────────────────────────────────────────
 
