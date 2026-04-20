@@ -1,17 +1,72 @@
-version: '3.8'
-
 services:
-  web:
-    image: documind/web
-    ports:
-      - 80:80
-    networks:
-      - documind-net
-  worker:
-    image: documind/worker
-    networks:
-      - documind-net
+  - type: web
+    name: documind-api
+    runtime: python
+    pythonVersion: 3.11
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel && \
+      pip install torch --index-url https://download.pytorch.org/whl/cpu && \
+      pip install -r backend/requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        scope: service
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: documind-redis
+          property: connectionString
+      - key: QDRANT_URL
+        value: http://documind-qdrant:6333
+      - key: JWT_SECRET
+        scope: service
+      - key: GROQ_API_KEY
+        scope: service
+      - key: SYNC_DATABASE_URL
+        scope: service
+      - key: PYTHONPATH
+        value: /opt/render/project/src:/app
 
-networks:
-  documind-net:
-    driver: bridge
+  - type: background
+    name: documind-worker
+    runtime: python
+    pythonVersion: 3.11
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel && \
+      pip install torch --index-url https://download.pytorch.org/whl/cpu && \
+      pip install -r backend/requirements.txt
+    startCommand: arq app.worker.WorkerSettings
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        scope: service
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: documind-redis
+          property: connectionString
+      - key: QDRANT_URL
+        value: http://documind-qdrant:6333
+      - key: JWT_SECRET
+        scope: service
+      - key: GROQ_API_KEY
+        scope: service
+      - key: SYNC_DATABASE_URL
+        scope: service
+      - key: PYTHONPATH
+        value: /opt/render/project/src:/app
+
+  - type: redis
+    name: documind-redis
+    plan: free
+    ipAllowList: []
+
+  - type: pserv
+    name: documind-postgres
+    runtime: postgres
+    plan: free
+    ipAllowList: []
+    postgresVersion: 16
+    initialDatabase: documind
+    user: documind
