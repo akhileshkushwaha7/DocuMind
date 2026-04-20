@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    image: documind/web
+    ports:
+      - 80:80
+    networks:
+      - documind-net
+  worker:
+    image: documind/worker
+    networks:
+      - documind-net
+
+networks:
+  documind-net:
+    driver: bridge
