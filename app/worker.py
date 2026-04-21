@@ -168,18 +168,26 @@ class WorkerSettings:
 
 # ── Enqueue helper ─────────────────────────────────────────────
 
+# async def enqueue_embed(document_id: str):
+#     """Enqueue a document for embedding"""
+#     try:
+#         pool = await create_pool(get_redis_settings())
+#         job = await pool.enqueue_job("embed_document", document_id)
+#         log.info("job_enqueued", document_id=document_id, job_id=str(job.job_id))
+#         await pool.aclose()
+#     except Exception as e:
+#         log.error(
+#             "enqueue_failed",
+#             document_id=document_id,
+#             error=str(e),
+#             traceback=traceback.format_exc()
+#         )
+#         raise
+
+from arq.connections import create_pool
+from app.worker import redis_settings
+
 async def enqueue_embed(document_id: str):
-    """Enqueue a document for embedding"""
-    try:
-        pool = await create_pool(get_redis_settings())
-        job = await pool.enqueue_job("embed_document", document_id)
-        log.info("job_enqueued", document_id=document_id, job_id=str(job.job_id))
-        await pool.aclose()
-    except Exception as e:
-        log.error(
-            "enqueue_failed",
-            document_id=document_id,
-            error=str(e),
-            traceback=traceback.format_exc()
-        )
-        raise
+    pool = await create_pool(redis_settings())
+    await pool.enqueue_job("embed_document", document_id)
+    await pool.aclose()
