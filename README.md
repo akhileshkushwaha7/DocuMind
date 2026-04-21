@@ -46,7 +46,7 @@ Chat with your PDF documents using AI. Upload a PDF, ask questions, get answers 
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/yourname/documind.git
+git clone https://github.com/akhileshkushwaha7/DocuMind.git
 cd documind
 ```
 
